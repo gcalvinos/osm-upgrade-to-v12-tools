@@ -1,0 +1,35 @@
+applications:
+  lcm:
+    resources:
+      lcm-image: rocks.canonical.com:443/canonicalosm/lcm:v10.1.1-3
+  nbi:
+    resources:
+      nbi-image: rocks.canonical.com:443/canonicalosm/nbi:v10.1.1-0
+  mon:
+    resources:
+      mon-image: rocks.canonical.com:443/canonicalosm/mon:v10.1.1-0
+  ro:
+    resources:
+      ro-image: rocks.canonical.com:443/canonicalosm/ro:v10.1.1-2
+  ng-ui:
+    resources:
+      ng-ui-image: rocks.canonical.com:443/canonicalosm/ng-ui:v10.1.1-0
+  pol:
+    resources:
+      pol-image: rocks.canonical.com:443/canonicalosm/pol:v10.1.1-0
+  prometheus:
+    resources:
+      backup-image: rocks.canonical.com:443/canonicalosm/prometheus-backup:latest
+      image: rocks.canonical.com:443/canonicalosm/prometheus:latest
+  grafana:
+    resources:
+      image: rocks.canonical.com:443/canonicalosm/grafana:latest
+  kafka-k8s:
+    resources:
+      kafka-image: rocks.canonical.com:443/canonicalosm/cp-kafka:7.0.1
+  zookeeper-k8s:
+    resources:
+      zookeeper-image: rocks.canonical.com:443/canonicalosm/cp-zookeeper:7.0.1
+  keystone:
+    resources:
+      keystone-image: rocks.canonical.com:443/canonicalosm/keystone:v9.1.1-2

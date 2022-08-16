@@ -1,0 +1,18 @@
+bundle: kubernetes
+applications:
+  mariadb:
+    charm: charmed-osm-mariadb-k8s
+    scale: 1
+    series: kubernetes
+    storage:
+      database: 50M
+    options:
+      password: manopw
+      root_password: osm4u
+      user: mano
+  mongodb:
+    charm: charmed-osm-mongodb-k8s
+    scale: 1
+    series: kubernetes
+    storage:
+      database: 50M

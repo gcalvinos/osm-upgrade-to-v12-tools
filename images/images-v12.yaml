@@ -1,0 +1,32 @@
+applications:
+  lcm:
+    resources:
+      lcm-image: opensourcemano/lcm:12
+  nbi:
+    resources:
+      nbi-image: opensourcemano/nbi:12
+  mon:
+    resources:
+      mon-image: opensourcemano/mon:12
+  ro:
+    resources:
+      ro-image: opensourcemano/ro:12
+  ng-ui:
+    resources:
+      ng-ui-image: opensourcemano/ng-ui:12
+  pol:
+    resources:
+      pol-image: opensourcemano/pol:12
+  prometheus:
+    resources:
+      backup-image: rocks.canonical.com:443/canonicalosm/prometheus-backup:latest
+      image: rocks.canonical.com:443/canonicalosm/prometheus:latest
+  grafana:
+    resources:
+      image: rocks.canonical.com:443/canonicalosm/grafana:latest
+  kafka-k8s:
+    resources:
+      kafka-image: rocks.canonical.com:443/canonicalosm/cp-kafka:7.0.1
+  zookeeper-k8s:
+    resources:
+      zookeeper-image: rocks.canonical.com:443/canonicalosm/cp-zookeeper:7.0.1

@@ -1,0 +1,76 @@
+bundle: kubernetes
+applications:
+  keystone:
+    charm: cs:~charmed-osm/keystone-15
+    scale: 1
+  zookeeper-k8s:
+    charm: cs:~charmed-osm/zookeeper-0
+    trust: true
+    storage:
+      database: 100M
+    scale: 3
+  kafka-k8s:
+    charm: cs:~charmed-osm/kafka-0
+    trust: true
+    scale: 3
+    storage:
+      database: 100M
+  nbi:
+    charm: cs:~charmed-osm/nbi-17
+    scale: 3
+    options:
+      auth_backend: keystone
+  ro:
+    charm: cs:~charmed-osm/ro-11
+    scale: 3
+  ng-ui:
+    charm: cs:~charmed-osm/ng-ui-24
+    scale: 3
+  lcm:
+    charm: cs:~charmed-osm/lcm-14
+    scale: 3
+  mon:
+    charm: cs:~charmed-osm/mon-11
+    scale: 1
+  pol:
+    charm: cs:~charmed-osm/pol-9
+    scale: 3
+  prometheus:
+    charm: cs:~charmed-osm/prometheus-8
+    channel: candidate
+    scale: 1
+    series: kubernetes
+    storage:
+      data: 50M
+  grafana:
+    charm: cs:~charmed-osm/grafana-9
+    channel: candidate
+    scale: 1
+    series: kubernetes
+relations:
+  - - grafana:prometheus
+    - prometheus:prometheus
+  - - kafka-k8s:zookeeper
+    - zookeeper-k8s:zookeeper
+  - - lcm:kafka
+    - kafka-k8s:kafka
+  - - ro:ro
+    - lcm:ro
+  - - ro:kafka
+    - kafka-k8s:kafka
+  - - pol:kafka
+    - kafka-k8s:kafka
+  - - mon:kafka
+    - kafka-k8s:kafka
+  - - nbi:kafka
+    - kafka-k8s:kafka
+  - - nbi:prometheus
+    - prometheus:prometheus
+  - - nbi:keystone
+    - keystone:keystone
+  - - mon:prometheus
+    - prometheus:prometheus
+  - - ng-ui:nbi
+    - nbi:nbi
+  - - mon:keystone
+    - keystone:keystone

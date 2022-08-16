@@ -1,0 +1,106 @@
+bundle: kubernetes
+applications:
+  ingress-integrator:
+    charm: nginx-ingress-integrator
+    scale: 1
+  osm-vca-integrator:
+    charm: ./charms/osm-vca-integrator.charm
+    scale: 1
+  keystone:
+    charm: osm-keystone
+    channel: edge
+    scale: 3
+    trust: true
+  zookeeper-k8s:
+    charm: zookeeper-k8s
+    trust: true
+    storage:
+      data: 100M
+    scale: 3
+  kafka-k8s:
+    charm: kafka-k8s
+    trust: true
+    scale: 3
+    storage:
+      data: 100M
+    options:
+      metrics: false
+  nbi:
+    charm: ./charms/osm-nbi.charm
+    scale: 3
+  ro:
+    charm: ./charms/osm-ro.charm
+    scale: 3
+  ng-ui:
+    charm: ./charms/osm-ng-ui.charm
+    scale: 3
+  lcm:
+    charm: ./charms/osm-lcm.charm
+    scale: 3
+  mon:
+    charm: ./charms/osm-mon.charm
+    scale: 1
+  pol:
+    charm: ./charms/osm-pol.charm
+    scale: 3
+  prometheus:
+    charm: osm-prometheus
+    channel: candidate
+    scale: 1
+    series: kubernetes
+    storage:
+      data: 50M
+  grafana:
+    charm: osm-grafana
+    channel: candidate
+    scale: 1
+    series: kubernetes
+  mongodb-integrator:
+    charm: mongodb-integrator
+    channel: latest/edge
+    scale: 1
+relations:
+  - - grafana:prometheus
+    - prometheus:prometheus
+  - - kafka-k8s:zookeeper
+    - zookeeper-k8s:zookeeper
+  - - lcm:kafka
+    - kafka-k8s:kafka
+  - - ro:ro
+    - lcm:ro
+  - - ro:kafka
+    - kafka-k8s:kafka
+  - - pol:kafka
+    - kafka-k8s:kafka
+  - - mon:kafka
+    - kafka-k8s:kafka
+  - - nbi:kafka
+    - kafka-k8s:kafka
+  - - nbi:prometheus
+    - prometheus:prometheus
+  - - nbi:keystone
+    - keystone:keystone
+  - - mon:prometheus
+    - prometheus:prometheus
+  - - ng-ui:nbi
+    - nbi:nbi
+  - - mon:keystone
+    - keystone:keystone
+  - - osm-vca-integrator:vca
+    - lcm:vca
+  - - osm-vca-integrator:vca
+    - mon:vca
+  - - ingress-integrator:ingress
+    - nbi:ingress
+  - - ingress-integrator:ingress
+    - ng-ui:ingress
+  - - mongodb-integrator:mongodb
+    - lcm:mongodb
+  - - mongodb-integrator:mongodb
+    - nbi:mongodb
+  - - mongodb-integrator:mongodb
+    - mon:mongodb
+  - - mongodb-integrator:mongodb
+    - pol:mongodb
+  - - mongodb-integrator:mongodb
+    - ro:mongodb

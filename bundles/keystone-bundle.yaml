@@ -1,0 +1,7 @@
+bundle: kubernetes
+applications:
+  keystone:
+    charm: osm-keystone
+    channel: edge
+    scale: 1
+    trust: true
