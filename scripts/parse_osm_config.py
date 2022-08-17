@@ -187,6 +187,55 @@ def add_accounts_controllers_info(accounts_file, controllers_file, public_key):
     return vca
 
 
+def parse_module(config, data):
+    parsed_data = {"applications": {}}
+
+    if MODULES.get(config["module"]):
+        parsed_data["applications"][config["module"]] = {}
+        parsed_data["applications"][config["module"]]["options"] = MODULES[
+            config["module"]
+        ](data)
+    elif config["module"] == "keystone":
+        parsed_data["applications"]["keystone"] = {}
+        parsed_data["applications"]["keystone"]["options"] = update_keystone(data)
+    else:
+        parsed_data["applications"]["vca-integrator"] = {}
+        parsed_data["applications"]["vca-integrator"]["options"] = vcaintegrator(data)
+    return parsed_data
+
+
+def parse_all(data):
+    parsed_data = {"applications": {}}
+
+    for module, function in MODULES.items():
+        parsed_data["applications"][module] = {"options": function(data)}
+    for module in NO_CHANGE_MODULES:
+        if data["applications"][module].get("options"):
+            parsed_data["applications"][module] = {
+                "options": data["applications"][module]["options"]
+            }
+    parsed_data["applications"]["mongodb-integrator"] = {
+        "options": mongodbintegrator(data)
+    }
+    return parsed_data
+
+
+def set_accounts(config, data):
+
+    if not data.get("applications"):
+        data["applications"] = {"vca-integrator": {"options": {}}}
+    if not data["applications"].get("vca-integrator"):
+        data["applications"]["vca-integrator"] = {"options": {}}
+    accounts_file = config["set_acc"][0]
+    controllers_file = config["set_acc"][1]
+    pkey_file = config["set_acc"][2]
+    data["applications"]["vca-integrator"]["options"].update(
+        add_accounts_controllers_info(accounts_file, controllers_file, pkey_file)
+    )
+
+    return data
+
+
 MODULES = {
     "nbi": update_nbi,
     "lcm": update_lcm,
@@ -210,8 +259,9 @@ def main():
         description="Parse configuration from old Charms to be used by new ones",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    group = parser.add_mutually_exclusive_group()
     parser.add_argument("input_config", help="Input configuration file")
-    parser.add_argument(
+    group.add_argument(
         "-s",
         "--set_acc",
         nargs=3,
@@ -220,69 +270,38 @@ def main():
             python3 parse_osm_config.py <output-config-file> -s <accounts-file.yaml> <controllers-file.yaml> <juju-public-key>",
     )
 
-    parser.add_argument(
+    group.add_argument(
         "-m",
         "--module",
+        choices=[
+            "nbi",
+            "lcm",
+            "mon",
+            "pol",
+            "ro",
+            "ng-ui",
+            "vca-integrator",
+            "keystone",
+        ],
         help="The config of the module will be written. Allowed module names are: nbi lcm mon pol ro ng-ui keystone and vca",
     )
     args = parser.parse_args()
     config = vars(args)
 
-    parsed_data = {"applications": {}}
+    all_modules = False if config.get("module") or config.get("set_acc") else True
+
     with open(config["input_config"], "r") as f:
         data = yaml.safe_load(f)
         if config.get("module"):
-            if config["module"] not in (
-                "nbi" "lcm" "mon" "pol" "ro" "ng-ui" "vca-integrator" "keystone"
-            ):
-                print(f"Wrong module name {config['module']}")
-                exit(-1)
-
-            if MODULES.get(config["module"]):
-                parsed_data["applications"][config["module"]] = {}
-                parsed_data["applications"][config["module"]]["options"] = MODULES[
-                    config["module"]
-                ](data)
-            elif config["module"] == "keystone":
-                parsed_data["applications"]["keystone"] = {}
-                parsed_data["applications"]["keystone"]["options"] = update_keystone(
-                    data
-                )
-            else:
-                parsed_data["applications"]["vca-integrator"] = {}
-                parsed_data["applications"]["vca-integrator"][
-                    "options"
-                ] = vcaintegrator(data)
+            parsed_data = parse_module(config, data)
             with open(f"{config['module']}-config.yaml", "w") as osm_config:
                 osm_config.write(yaml.safe_dump(parsed_data))
-
-        elif config.get("set_acc"):
-            if not data.get("applications"):
-                data["applications"] = {"vca-integrator": {"options": {}}}
-            if not data["applications"].get("vca-integrator"):
-                data["applications"]["vca-integrator"] = {"options": {}}
-            accounts_file = config["set_acc"][0]
-            controllers_file = config["set_acc"][1]
-            pkey_file = config["set_acc"][2]
-            data["applications"]["vca-integrator"]["options"].update(
-                add_accounts_controllers_info(
-                    accounts_file, controllers_file, pkey_file
-                )
-            )
+        if config.get("set_acc"):
+            updated_data = set_accounts(config, data)
             with open("osm-config.yaml", "w") as osm_config:
-                osm_config.write(yaml.safe_dump(data))
-        else:
-            for module, function in MODULES.items():
-                parsed_data["applications"][module] = {"options": function(data)}
-            for module in NO_CHANGE_MODULES:
-                if data["applications"][module].get("options"):
-                    parsed_data["applications"][module] = {
-                        "options": data["applications"][module]["options"]
-                    }
-            parsed_data["applications"]["mongodb-integrator"] = {
-                "options": mongodbintegrator(data)
-            }
-
+                osm_config.write(yaml.safe_dump(updated_data))
+        if all_modules:
+            parsed_data = parse_all(data)
             with open("osm-config.yaml", "w") as osm_config:
                 osm_config.write(yaml.safe_dump(parsed_data))
 
